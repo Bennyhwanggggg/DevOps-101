@@ -85,6 +85,7 @@ A Pod is a group of one or more containers with shared/network and a specficatio
 ### Pods characteristitcs
 - Pods regularly dies.  
 - Pods are short lived.  
+- Should be stateless for replication.  
 
 ### Labels 
 Key value pairs. A service will look for matching key value pair to select a pod.  
@@ -174,4 +175,123 @@ The storage between what we want and what is implemented need to be appropriate.
 #### How to give different type of storage?
 Use `storageClassName`. The `PersistentVolumeClaim` will search through cluster to find one that matches the name and storage.  
 
+## Master Node
+- Manages all nodes in the architecture.  
+- Detects which node has failed. 
 
+### What happens if a master node dies?
+- Temporary lost of master is not a problem as other nodes can operate without it. As long as master is restored, it is fine.  
+- If a pod dies when master is dead, it won't be restored until master is up again.  
+
+### Troubleshooting a 'Delinquent' node
+- Use visualisation tools.   
+
+## kops
+- `ig` instance group
+
+### Create configuration
+```
+kops create secret --name ${NAME} sshpublickey admin -i ~/.ssh/id_rsa.pub
+```
+### Create instance
+```
+kops update cluster ${NAME} --yes
+```
+### Status check
+```
+kops validate cluster
+```
+### Delete cluster
+```
+kops delete cluster --name ${NAME} --yes
+```
+
+## StorageClass
+A `StorageClass` provides a way for admin to describe the classes of storage they want to use. `StorageClass` is dynamically created as when they are needed.  
+- Provisioner: provisions cluster.
+
+## Logging
+### Manually logging
+Directly inspecting the log
+```
+kubectl logs -f ${NAME}
+```
+### Distributed logging: ELK Stack (ElasticStack)
+Loggin of multiple software component. We install another software component (Logstash or Fluentd) onto a node/ec2 instance to do logging. It gather all the logging process that it can find on a node. The logging software must be installed on the same node.  
+Use Elasticsearch to search through log files. Elasticsearch is a distributed search and analytic engine. We stream log file results into elasticsearch and use a visualisation tool like Kibana to see the data. 
+
+## Alerts
+### Prometheus
+- Used for logging and gather data, but does have it's own frontend.  
+- Monitoring load, traffic and actitivies etc.  
+- AlertManager to send alert to some place. e.g slack
+
+### Grafana
+Frontend for visualisation. 
+
+## Kubernetes secrets
+### See secrets
+```
+kubectl get secret
+```
+
+### Create secret
+```
+kubectl create secret ...
+```
+
+## Requests and Limits
+How much RAM, CPU and memory we think a container will need.  
+Use `request` label.  
+See details
+```
+kubectl describe node ${NAME}
+```
+- Can have fractions of CPU.  
+See usage
+```
+kubectl top pod
+```
+- Request is not a limit and is just a suggestions.  
+
+### Setting requests
+Set based on usage from `kubectl top pod`.
+
+## Scaling
+### Horizontal Pod Autoscaling
+- Kubernetes to auto scale depending on workload.  
+- Not every pod can be replicated.  
+- Increase number of instance.  
+- Use `HPA`, Horizontal Pod Autoscaler. If the usage >50% cpu request, autoscale to maximum of N pods.  
+```
+kubectl autoscale deployment ${pod name} --cpu-percent {amount} --min {n} --max {n}
+```
+Use below with spec, status as well
+```
+kind: HorizontalPodAutoscaler
+```
+- Process of scaling up and down is CPU intensive so we want to avoid threshing. Therefore, it does not change scale immediately until it has observed consistent usage.  
+
+#### When to replicate?
+- Ensure the software inside the pod so that if it is replicated, it can still behave properly.  
+- Database are hard to replicated.  
+
+### Readiness and Liveness Probes
+- In kubernetes, as soon as the pod is ready, it change its status to running. However, even when a pod is ready, it may not be actually ready since the code may not be ready.   
+- We setup readiness probs so that kubernetes test if a container is ready. We can setup so it test using `httpGet` or other methods.  
+- A liveness probe will run for duration of the lifetime and restart when the container has failed.  
+
+## Scheduler
+- Tells kubernetes how to distribute pods to nodes.  
+- Calculates resources and allocate pods to nodes that is appropriate.  
+- When a new pod added to a node that makes the current node run out of memory, one pod will be removed to another pod.  
+- Scheduler evicts `BestEffort` first, then `Burstable` then `Guaranteed`.  
+- Evicted pods are rescueduled to another node.    
+
+### Pod Labels
+`QoS: Guaranteed`: A pod that has good specficiation with request and limit. Scheduler doesn't worry about theses.    
+`QoS: Burstable`: A pod that only specifies request. Request is just a hint. The pod is allowed to do a burst for a short period. Kubernetes scheduler is going to evict one or more pods for the node.  
+`QoS: BestEffort`: A pod with no specificaiton with request and limit.  
+If a pod goes over its limit, it is automatically evicted and ineligble for rescueduling.  
+
+## Role Based Access Control (RBAC)
