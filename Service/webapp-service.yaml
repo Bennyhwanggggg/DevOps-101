@@ -1,0 +1,37 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: fleetman-webapp
+
+spec:
+  # This defines which part are going to be represented by this service.
+  # The service becomes a network endpoint for either other service or other external users. 
+  selector: 
+    app: webapp
+    release: 0
+
+  ports:
+    - name: http
+      port: 80
+      nodePort: 30080  # This is only for type NodePort, have to use any number greater than 30000
+
+  # Type can be LoadBalancer, which is only available for some cloud provider
+  # ClusterIP is for service that is only available for other inside kubernetes cluster.
+  # NodePort expose a port through a node, we can choose which port
+  type: NodePort
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: fleetman-queue
+
+spec:
+  selector: 
+    app: queue
+
+  ports:
+    - name: http
+      port: 8161
+      nodePort: 30010 
+  type: NodePort
