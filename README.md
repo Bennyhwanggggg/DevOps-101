@@ -36,9 +36,17 @@ See all service
 ```
 kubectl get service
 ```
-See details
+See persistant volume claims
+```
+kubectl get pv
+```
+See details and events
 ```
 kubectl describe svc/po/rs {service name}
+```
+See logs
+```
+kubectl logs -f {name}
 ```
 
 ### Rollout
@@ -63,6 +71,9 @@ Container to allow software environment to be contained and run without problem.
 
 ## Docker CLI and Docker daemon
 - Docer CLI connects to Docker daemon running on a server.  
+
+## Docker mount
+- Store Docker data outside the container.  
 
 ## Pods
 ### What is a Pod?
@@ -126,7 +137,41 @@ Use the release label in a pod and create a new pod with new release version lab
 ## Microservices
 - Opposite of monolith. In monolith, you have one single application that contains code for many components. In microservice, the architecture is made up of many applications.  
 - In monolith, we cannot upgrade components separately and we have to coordinate upgrades. However, in microservice, we can do this as the components may run on their own separate containers/hardwares.  
+
+### Microservice design
+#### Single responsibility principle
 - Each service should be responsible for only one business requirement.  
 
+#### Highly Coheisve
+- Should be handling only one business requirement/one responsibility
+
+#### Loosely Coupled 
+- Not be too dependent on other service.  
+- Minimize interface between services.  
+
+#### No Integration Database
+- Breaks cohesive and couple rule.  
+- Each service has its own store.  
+- Can have multiple type of different storage.  
+- Break database tables into different services.  
+
+### API Gateway
+- Stop frontend or client side to directly touch all component of the microservices.  
+- Single point of entry. It delegates calls to appropriate services.  
+
+### Persistance
+- Data storage so data is not lost when system redeployed.  
+
+#### hostPath vs persistentVolumeClaim
+- hostPath is only for local and is hard coded.  
+- When we change to change to cloud, we use `persistentVolumeClaim` as we will have to change the hostPath to all different config files. `persistentVolumeClaim` is a pointer to config file. 
+-`PersistentVolumeClaim` is what we want 
+- `PersistentVolume` is what is implemented
+
+#### PersistentVolumeClaim vs PersistentVolume
+The storage between what we want and what is implemented need to be appropriate. E.g if we want 20Gi, the physical one need to have at least that requirement.  
+
+#### How to give different type of storage?
+Use `storageClassName`. The `PersistentVolumeClaim` will search through cluster to find one that matches the name and storage.  
 
 
