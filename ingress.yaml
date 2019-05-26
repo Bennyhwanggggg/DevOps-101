@@ -1,0 +1,14 @@
+apiVersion: extensions/vibeta1  # new version has different apiVersion
+kind: Ingress
+metadaa:
+  name: basic-routing
+  # add annotations for authentication here
+spec:
+  rules:
+    - host: domain.com
+      http:
+        paths:
+          - path: /
+            baceknd:
+              serviceName: fleetman-webapp
+              servicePort: 80
