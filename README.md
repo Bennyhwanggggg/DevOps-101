@@ -355,4 +355,17 @@ A DaemonSet ensures that all (or some) Nodes run a copy of a Pod. As nodes are a
 Use statefulset then each part has its own name and identity.  
 - In mongoDb, it launches multiple instance with one as a primary. Every insert, it goes to the primary for communication. Then the other copies get data from the primary.  
 
+## CI/CD
+### Jenkins
+- Use webhooks for automatic deployment
+
+#### Multibranch pipeline
+- Picks up Jenkinsfile from multiple branches.  
+
+#### Organisation pipeline
+- Credentials. 
+- Owner: organisation name. 
+- Search for all jenkinsfile in entire organisation. 
+
+
 
